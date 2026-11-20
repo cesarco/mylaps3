@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyLaps Simulator Control Panel</title>
+    <script>
+        // Detectar la ruta base para configurar Socket.IO correctamente
+        const basePath = window.location.pathname.startsWith('/mylapssim') 
+            ? '/mylapssim' 
+            : '';
+        
+        // Cargar Socket.IO dinámicamente con la ruta correcta
+        const script = document.createElement('script');
+        script.src = basePath + '/socket.io/socket.io.js';
+        document.head.appendChild(script);
+        
+        // Helper para construir URLs de API
+        function apiUrl(endpoint) {
+            return basePath + endpoint;
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .status-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+        }
+        
+        .status-item .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .status-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .status-item .value.running {
+            color: #28a745;
+        }
+        
+        .status-item .value.stopped {
+            color: #dc3545;
+        }
+        
+        .status-item .value.connected {
+            color: #28a745;
+        }
+        
+        .status-item .value.disconnected {
+            color: #dc3545;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .control-panel h3 {
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group label input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .progress-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .file-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .file-info h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .file-info .file-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .file-stats span {
+            background: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .logs {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-timestamp {
+            color: #4a5568;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏁 MyLaps Simulator</h1>
+            <p>Control Panel for Racing Data Simulation</p>
+        </div>
+        
+        <div id="alert-container"></div>
+        
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="label">Simulator Status</div>
+                <div id="simulator-status" class="value stopped">STOPPED</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Redis Connection</div>
+                <div id="redis-status" class="value disconnected">DISCONNECTED</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Current File</div>
+                <div id="current-file" class="value">None</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Messages Sent</div>
+                <div id="messages-sent" class="value">0</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Loops Completed</div>
+                <div id="loops-completed" class="value">0</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Loop Mode</div>
+                <div id="loop-status" class="value">Enabled</div>
+            </div>
+        <div class="status-item">
+            <div class="label">Clean Redis on Start</div>
+            <div id="clean-redis-status" class="value">Enabled</div>
+        </div>
+    </div>
+    
+    <div class="progress-section">
+        <h3>Simulation Progress</h3>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div id="progress-text">Ready to start simulation</div>
+        
+        <!-- Nueva sección de estadísticas de timing -->
+        <div id="timing-stats" style="display: none; margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+            <h4>Message Timing Statistics</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div>
+                    <strong>Configured Delay:</strong> <span id="timing-configured">100</span>ms
+                </div>
+                <div>
+                    <strong>Avg Delay:</strong> <span id="timing-avg">0</span>ms
+                </div>
+                <div>
+                    <strong>Min/Max:</strong> <span id="timing-min">0</span>/<span id="timing-max">0</span>ms
+                </div>
+            </div>
+            <div id="timing-diagnosis" style="margin-top: 10px; font-style: italic;"></div>
+        </div>
+    </div>        <div class="controls-grid">
+            <div class="control-panel">
+                <h3>📂 File Selection</h3>
+                <div class="form-group">
+                    <label for="file-select">Select Data File:</label>
+                    <select id="file-select">
+                        <option value="">Loading files...</option>
+                    </select>
+                </div>
+                <div id="file-info" class="file-info" style="display: none;">
+                    <h4>File Information</h4>
+                    <div class="file-stats">
+                        <span>Lines: <strong id="file-lines">0</strong></span>
+                        <span>Size: <strong id="file-size">0 KB</strong></span>
+                    </div>
+                </div>
+                <button id="refresh-files" class="btn btn-secondary">🔄 Refresh Files</button>
+            </div>
+            
+            <div class="control-panel">
+                <h3>⚙️ Simulation Settings</h3>
+                <div class="form-group">
+                    <label for="speed-input">Speed (ms between messages):</label>
+                    <input type="number" id="speed-input" value="100" min="1" max="10000">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="loop-toggle" checked> 
+                        Enable Loop Mode
+                    </label>
+                    <small style="display: block; color: #666; margin-top: 5px;">When enabled, simulation will restart automatically when file ends</small>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clean-redis-toggle" checked> 
+                        Clean Redis on Start
+                    </label>
+                    <small style="display: block; color: #666; margin-top: 5px;">When enabled, Redis will be cleared before starting simulation</small>
+                </div>
+                <button id="update-settings" class="btn btn-secondary">Update Settings</button>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>🎮 Simulation Controls</h3>
+            <button id="start-btn" class="btn btn-primary">▶️ Start Simulation</button>
+            <button id="stop-btn" class="btn btn-danger" disabled>⏹️ Stop Simulation</button>
+            <button id="reset-redis-btn" class="btn btn-warning">🧹 Reset Redis</button>
+        </div>
+        
+        <div class="logs" id="logs">
+            <div class="log-entry">
+                <span class="log-timestamp">[00:00:00]</span>
+                <span>Simulator initialized. Ready to load data files.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SimulatorUI {
+            constructor() {
+                // Configurar Socket.IO con la ruta correcta
+                this.socket = io(window.location.origin, {
+                    path: basePath + '/socket.io/'
+                });
+                this.files = [];
+                this.currentStatus = {};
+                this.initializeElements();
+                this.setupEventListeners();
+                this.setupSocketListeners();
+                this.loadFiles();
+                this.loadSettings();
+            }
+            
+            initializeElements() {
+                this.elements = {
+                    simulatorStatus: document.getElementById('simulator-status'),
+                    redisStatus: document.getElementById('redis-status'),
+                    currentFile: document.getElementById('current-file'),
+                    messagesSent: document.getElementById('messages-sent'),
+                    loopsCompleted: document.getElementById('loops-completed'),
+                    loopStatus: document.getElementById('loop-status'),
+                    cleanRedisStatus: document.getElementById('clean-redis-status'),
+                    progressFill: document.getElementById('progress-fill'),
+                    progressText: document.getElementById('progress-text'),
+                    fileSelect: document.getElementById('file-select'),
+                    fileInfo: document.getElementById('file-info'),
+                    fileLines: document.getElementById('file-lines'),
+                    fileSize: document.getElementById('file-size'),
+                    speedInput: document.getElementById('speed-input'),
+                    loopToggle: document.getElementById('loop-toggle'),
+                    cleanRedisToggle: document.getElementById('clean-redis-toggle'),
+                    startBtn: document.getElementById('start-btn'),
+                    stopBtn: document.getElementById('stop-btn'),
+                    resetRedisBtn: document.getElementById('reset-redis-btn'),
+                    refreshFilesBtn: document.getElementById('refresh-files'),
+                    updateSettingsBtn: document.getElementById('update-settings'),
+                    logs: document.getElementById('logs'),
+                    alertContainer: document.getElementById('alert-container'),
+                    // Elementos de estadísticas de timing
+                    timingStats: document.getElementById('timing-stats'),
+                    timingConfigured: document.getElementById('timing-configured'),
+                    timingAvg: document.getElementById('timing-avg'),
+                    timingMin: document.getElementById('timing-min'),
+                    timingMax: document.getElementById('timing-max'),
+                    timingDiagnosis: document.getElementById('timing-diagnosis')
+                };
+            }
+            
+            setupEventListeners() {
+                this.elements.startBtn.addEventListener('click', () => this.startSimulation());
+                this.elements.stopBtn.addEventListener('click', () => this.stopSimulation());
+                this.elements.resetRedisBtn.addEventListener('click', () => this.resetRedis());
+                this.elements.refreshFilesBtn.addEventListener('click', () => this.loadFiles());
+                this.elements.updateSettingsBtn.addEventListener('click', () => this.updateSettings());
+                this.elements.fileSelect.addEventListener('change', () => this.onFileChange());
+            }
+            
+            setupSocketListeners() {
+                this.socket.on('status', (status) => {
+                    this.updateStatus(status);
+                });
+                
+                this.socket.on('connect', () => {
+                    this.addLog('Connected to simulator server');
+                });
+                
+                this.socket.on('disconnect', () => {
+                    this.addLog('Disconnected from simulator server');
+                });
+            }
+            
+            async loadFiles() {
+                try {
+                    this.elements.fileSelect.innerHTML = '<option value="">Loading files...</option>';
+                    
+                    const response = await fetch(apiUrl('/api/files'));
+                    const files = await response.json();
+                    
+                    this.files = files;
+                    this.populateFileSelect();
+                    this.addLog(`Loaded ${files.length} data files`);
+                } catch (error) {
+                    this.showAlert('Error loading files: ' + error.message, 'error');
+                    this.addLog('Error loading files: ' + error.message);
+                }
+            }
+            
+            populateFileSelect() {
+                this.elements.fileSelect.innerHTML = '<option value="">Select a data file...</option>';
+                
+                this.files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.name;
+                    option.textContent = `${file.name} (${file.lines} lines, ${this.formatBytes(file.size)})`;
+                    if (file.error) {
+                        option.textContent += ` - Error: ${file.error}`;
+                        option.disabled = true;
+                    }
+                    this.elements.fileSelect.appendChild(option);
+                });
+            }
+            
+            onFileChange() {
+                const selectedFile = this.files.find(f => f.name === this.elements.fileSelect.value);
+                
+                if (selectedFile) {
+                    this.elements.fileInfo.style.display = 'block';
+                    this.elements.fileLines.textContent = selectedFile.lines;
+                    this.elements.fileSize.textContent = this.formatBytes(selectedFile.size);
+                } else {
+                    this.elements.fileInfo.style.display = 'none';
+                }
+            }
+            
+            async startSimulation() {
+                const filename = this.elements.fileSelect.value;
+                const speed = parseInt(this.elements.speedInput.value);
+                
+                if (!filename) {
+                    this.showAlert('Please select a data file first', 'warning');
+                    return;
+                }
+                
+                try {
+                    this.elements.startBtn.disabled = true;
+                    
+                    const response = await fetch(apiUrl('/api/start'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ filename, speed })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        this.showAlert('Simulation started successfully', 'success');
+                        this.addLog(`Started simulation with ${filename} at ${speed}ms intervals`);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    this.showAlert('Error starting simulation: ' + error.message, 'error');
+                    this.addLog('Error starting simulation: ' + error.message);
+                    this.elements.startBtn.disabled = false;
+                }
+            }
+            
+            async stopSimulation() {
+                try {
+                    this.elements.stopBtn.disabled = true;
+                    
+                    const response = await fetch(apiUrl('/api/stop'), {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        this.showAlert('Simulation stopped', 'success');
+                        this.addLog('Simulation stopped by user');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    this.showAlert('Error stopping simulation: ' + error.message, 'error');
+                    this.addLog('Error stopping simulation: ' + error.message);
+                } finally {
+                    this.elements.stopBtn.disabled = false;
+                }
+            }
+            
+            async resetRedis() {
+                if (!confirm('Are you sure you want to reset Redis? This will delete all data.')) {
+                    return;
+                }
+                
+                try {
+                    this.elements.resetRedisBtn.disabled = true;
+                    
+                    const response = await fetch(apiUrl('/api/reset-redis'), {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        this.showAlert('Redis reset successfully', 'success');
+                        this.addLog('Redis data cleared');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    this.showAlert('Error resetting Redis: ' + error.message, 'error');
+                    this.addLog('Error resetting Redis: ' + error.message);
+                } finally {
+                    this.elements.resetRedisBtn.disabled = false;
+                }
+            }
+            
+            async updateSettings() {
+                const speed = parseInt(this.elements.speedInput.value);
+                const loopEnabled = this.elements.loopToggle.checked;
+                const cleanRedisOnStart = this.elements.cleanRedisToggle.checked;
+                
+                try {
+                    const response = await fetch(apiUrl('/api/settings'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            speed, 
+                            loopEnabled, 
+                            cleanRedisOnStart 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        this.showAlert(`Settings updated: Speed ${speed}ms, Loop ${loopEnabled ? 'ON' : 'OFF'}, Clean Redis ${cleanRedisOnStart ? 'ON' : 'OFF'}`, 'success');
+                        this.addLog(`Settings updated: Speed ${speed}ms, Loop ${loopEnabled ? 'enabled' : 'disabled'}, Clean Redis ${cleanRedisOnStart ? 'enabled' : 'disabled'}`);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    this.showAlert('Error updating settings: ' + error.message, 'error');
+                    this.addLog('Error updating settings: ' + error.message);
+                }
+            }
+            
+            async loadSettings() {
+                try {
+                    const response = await fetch(apiUrl('/api/settings'));
+                    const settings = await response.json();
+                    
+                    if (response.ok) {
+                        this.elements.speedInput.value = settings.speed || 100;
+                        this.elements.loopToggle.checked = settings.loopEnabled !== false; // default true
+                        this.elements.cleanRedisToggle.checked = settings.cleanRedisOnStart !== false; // default true
+                        this.addLog('Settings loaded from server');
+                    }
+                } catch (error) {
+                    this.addLog('Error loading settings, using defaults: ' + error.message);
+                }
+            }
+            
+            updateStatus(status) {
+                this.currentStatus = status;
+                
+                // Update simulator status
+                this.elements.simulatorStatus.textContent = status.isRunning ? 'RUNNING' : 'STOPPED';
+                this.elements.simulatorStatus.className = status.isRunning ? 'value running' : 'value stopped';
+                
+                // Update Redis status
+                this.elements.redisStatus.textContent = status.redisConnected ? 'CONNECTED' : 'DISCONNECTED';
+                this.elements.redisStatus.className = status.redisConnected ? 'value connected' : 'value disconnected';
+                
+                // Update other fields
+                this.elements.currentFile.textContent = status.currentFile || 'None';
+                this.elements.messagesSent.textContent = status.sentCount || 0;
+                this.elements.loopsCompleted.textContent = status.loopCount || 0;
+                
+                // Update toggle status displays
+                if (status.config) {
+                    this.elements.loopStatus.textContent = status.config.loopEnabled ? 'Enabled' : 'Disabled';
+                    this.elements.cleanRedisStatus.textContent = status.config.cleanRedisOnStart ? 'Enabled' : 'Disabled';
+                }
+                
+                // Update progress - ahora basado en la posición en el archivo actual
+                const progress = status.totalLines > 0 ? (status.currentIndex / status.totalLines) * 100 : 0;
+                this.elements.progressFill.style.width = `${progress}%`;
+                
+                if (status.isRunning) {
+                    const currentPos = (status.currentIndex || 0) + 1;
+                    this.elements.progressText.textContent = `Loop ${status.loopCount || 0}: Line ${currentPos} of ${status.totalLines || 0} (${progress.toFixed(1)}%) - Total messages: ${status.sentCount || 0}`;
+                } else if (status.sentCount > 0) {
+                    this.elements.progressText.textContent = `Stopped after ${status.loopCount || 0} loops and ${status.sentCount || 0} total messages`;
+                } else {
+                    this.elements.progressText.textContent = 'Ready to start simulation (will loop continuously until stopped)';
+                }
+                
+                // Update button states
+                this.elements.startBtn.disabled = status.isRunning;
+                this.elements.stopBtn.disabled = !status.isRunning;
+                
+                // Update form inputs with current settings
+                if (status.config) {
+                    this.elements.speedInput.value = status.config.simulatorSpeed || status.config.speed || 100;
+                    if (status.config.loopEnabled !== undefined) {
+                        this.elements.loopToggle.checked = status.config.loopEnabled;
+                    }
+                    if (status.config.cleanRedisOnStart !== undefined) {
+                        this.elements.cleanRedisToggle.checked = status.config.cleanRedisOnStart;
+                    }
+                }
+                
+                // Actualizar estadísticas de timing si están disponibles
+                if (status.timingStats) {
+                    // Mostrar el panel de estadísticas
+                    this.elements.timingStats.style.display = 'block';
+                    
+                    // Actualizar los valores
+                    const stats = status.timingStats;
+                    this.elements.timingConfigured.textContent = stats.configuredDelay;
+                    this.elements.timingAvg.textContent = stats.avgDelay.toFixed(2);
+                    this.elements.timingMin.textContent = stats.minDelay;
+                    this.elements.timingMax.textContent = stats.maxDelay;
+                    
+                    // Diagnóstico para el usuario
+                    let diagnosis = 'Mensajes se están enviando con un timing consistente.';
+                    let diagnosisColor = 'green';
+                    
+                    // Detección de posibles problemas
+                    const configDelay = stats.configuredDelay;
+                    if (stats.minDelay < configDelay * 0.5 || stats.maxDelay > configDelay * 1.5) {
+                        if (stats.avgDelay < configDelay * 0.8) {
+                            diagnosis = 'Mensajes se están enviando más rápido de lo configurado. Posible envío en batch.';
+                            diagnosisColor = 'red';
+                        } else if (stats.avgDelay > configDelay * 1.2) {
+                            diagnosis = 'Mensajes se están enviando más lento de lo configurado. Posible sobrecarga del sistema.';
+                            diagnosisColor = 'orange';
+                        } else {
+                            diagnosis = 'Hay variación significativa en los tiempos de envío. Revisar la consistencia.';
+                            diagnosisColor = 'orange';
+                        }
+                    }
+                    
+                    this.elements.timingDiagnosis.textContent = diagnosis;
+                    this.elements.timingDiagnosis.style.color = diagnosisColor;
+                } else {
+                    // Ocultar el panel de estadísticas si no hay datos
+                    this.elements.timingStats.style.display = 'none';
+                }
+            }
+            
+            showAlert(message, type = 'success') {
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type}`;
+                alert.textContent = message;
+                
+                this.elements.alertContainer.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 5000);
+            }
+            
+            addLog(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span><span>${message}</span>`;
+                
+                this.elements.logs.appendChild(logEntry);
+                this.elements.logs.scrollTop = this.elements.logs.scrollHeight;
+                
+                // Keep only last 100 log entries
+                while (this.elements.logs.children.length > 100) {
+                    this.elements.logs.removeChild(this.elements.logs.firstChild);
+                }
+            }
+            
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+        
+        // Initialize the UI when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Esperar a que Socket.IO se cargue antes de inicializar la UI
+            script.onload = () => {
+                new SimulatorUI();
+            };
+            
+            // Fallback si Socket.IO ya está cargado
+            if (window.io) {
+                new SimulatorUI();
+            }
+        });
+    </script>
+</body>
+</html>

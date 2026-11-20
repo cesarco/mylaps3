@@ -1,0 +1,32 @@
+{
+  "name": "mylaps-middleware",
+  "version": "1.0.0",
+  "description": "MYLAPS middleware for processing Redis Stream data to MySQL",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js",
+    "api": "node api-server.js",
+    "clean-pending": "node clean_pending_messages.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "ioredis": "^5.3.2",
+    "mysql2": "^3.6.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "mylaps",
+    "redis",
+    "mysql",
+    "middleware"
+  ],
+  "author": "",
+  "license": "MIT"
+}

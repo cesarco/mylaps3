@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "checkJs": false,
+    "allowJs": true,
+    "noImplicitAny": false,
+    "strict": false
+  },
+  "include": [
+    "*.js",
+    "public/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "*.ts",
+    "*.tsx"
+  ],
+  "typeAcquisition": {
+    "enable": false
+  }
+}

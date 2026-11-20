@@ -1,0 +1,249 @@
+# MyLaps MVP2 Project .gitignore
+
+# ======================================
+# Node.js
+# ======================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# ======================================
+# Environment files
+# ======================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Backup env files
+.env.backup
+.env.old
+.env.example
+
+# ======================================
+# Python
+# ======================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# ======================================
+# Log files
+# ======================================
+*.log
+logs/
+recognized.log
+unrecognized.log
+mylaps_*.log
+simulator_*.log
+middleware_*.log
+redis_*.log
+
+# ======================================
+# Database files
+# ======================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ======================================
+# Redis
+# ======================================
+dump.rdb
+appendonly.aof
+redis.conf.bak
+
+# ======================================
+# IDE and Editors
+# ======================================
+.vscode/
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# VS Code specific (keep some files)
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ======================================
+# OS generated files
+# ======================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+
+# Windows
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ======================================
+# Temporary files
+# ======================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+# ======================================
+# MyLaps specific
+# ======================================
+# Data files are now all tracked
+# /data/*.txt 
+# !/data/example_data.txt
+# !/data/README.md
+
+# Generated reports
+CLEANUP_REPORT_*.md
+MIGRATION_REPORT_*.md
+
+# Session files
+.session
+*.session
+
+# Cache files
+.cache/
+cache/
+
+# ======================================
+# Docker
+# ======================================
+.dockerignore
+Dockerfile.bak
+docker-compose.override.yml
+
+# ======================================
+# Testing
+# ======================================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# ======================================
+# Build outputs
+# ======================================
+dist/
+build/
+out/
+target/
+
+# ======================================
+# Deployment
+# ======================================
+.deploy/
+deployment/
+*.deploy
+
+# ======================================
+# Security
+# ======================================
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+.secrets
+
+# ======================================
+# Archives
+# ======================================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ======================================
+# Configuration backups
+# ======================================
+config.bak
+config.old
+*.config.bak

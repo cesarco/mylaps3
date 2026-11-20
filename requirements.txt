@@ -1,0 +1,16 @@
+# Dependencias principales para MyLaps MVP2
+redis==4.5.4             # Cliente Redis para comunicación con la base de datos
+redis-om==0.1.2          # Redis Object Mapper para manipulación de datos
+scapy==2.5.0             # Para análisis de tráfico de red
+python-nmap==0.7.1       # Para escaneo de red
+python-dotenv==1.0.0     # Para carga de variables de entorno
+Pillow==10.0.0           # Procesamiento de imágenes (usado para iconos/GUI)
+pyinstaller==5.10.1      # Para crear ejecutables independientes
+numpy==1.24.3            # Para cálculos y procesamiento de datos
+matplotlib==3.7.1        # Para visualizaciones y gráficos
+tqdm==4.65.0             # Barras de progreso para procesos largos
+flask==2.3.2             # Para API web si es necesario
+requests==2.31.0         # Para peticiones HTTP
+asyncio==3.4.3           # Para programación asíncrona
+aioredis==2.0.1          # Cliente Redis asíncrono
+pytz==2023.3             # Para manejo de zonas horarias

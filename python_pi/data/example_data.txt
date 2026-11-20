@@ -1,0 +1,29 @@
+# Este es un archivo de ejemplo para el simulador de MyLaps
+# Cada línea representa un mensaje que normalmente se recibiría por UDP
+# Se pueden usar como base para pruebas sin necesidad de una conexión UDP activa
+# 
+# Para usar este archivo como simulador:
+# 1. Copia este archivo a data.txt o especifica su ruta en SIMULATOR_FILE
+# 2. Establece USE_SIMULATOR=true en tu archivo .env
+#
+# Formato: Líneas con mensajes de formato RMonitor/Orbits
+
+$A0104 MYLAPS Timing & Scoring Software
+$A0109 MYLAPS MyLaps X2
+$B01 21/05/24 15:03:31.789
+$C01 Demo
+$C02 Karting
+$E01001 1 19.504 16:01:37.911 10 10 0
+$E01002 2 19.721 16:01:57.632 10 20 0
+$E01003 3 19.802 16:02:17.434 10 30 0
+$E01001 4 19.415 16:02:36.849 10 40 0
+$E01002 5 19.631 16:02:56.480 10 50 0
+$E01003 6 19.548 16:03:16.028 10 60 0
+$E01001 7 19.327 16:03:35.355 10 70 0
+$E01002 8 19.402 16:03:54.757 10 80 0
+$E01003 9 19.583 16:04:14.340 10 90 0
+$E01001 10 19.487 16:04:33.827 10 100 0
+$G011 Juan Pérez 001
+$G012 María Rodríguez 002
+$G013 Carlos López 003
+$A0199 Session complete
